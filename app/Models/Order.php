@@ -20,7 +20,7 @@ class Order extends Model
     }
     
     public function student() {
-        return $this->hasOne(Student::class, 'id', 'user_id');
+        return $this->hasOne(Student::class, 'id', 'user_id'); //TODO: Revisar si envia bien
     }
 
     public function subject() {

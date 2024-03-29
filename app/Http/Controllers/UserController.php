@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserCollection;
+use App\Models\MoneyBox;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -15,16 +17,19 @@ class UserController extends Controller
 
     public function getUsers()
     {
-        return new UserCollection(User::where('estado','activo')->get());
+        return new UserCollection(User::where('estado', 'activo')->get());
     }
 
     public function getUsersActivated()
     {
-        return new UserCollection(User::where('estado','Sin activar')->get());
+        return new UserCollection(User::where('estado', 'Sin activar')->get());
     }
 
-    public function getCollaboratorsAvailable($idCorrespondence) {
-        return new UserCollection(User::whereDoesntHave('correspondences', function ($query) use ($idCorrespondence) { $query->where('correspondence_id', $idCorrespondence);})->get());
+    public function getCollaboratorsAvailable($idCorrespondence)
+    {
+        return new UserCollection(User::whereDoesntHave('correspondences', function ($query) use ($idCorrespondence) {
+            $query->where('correspondence_id', $idCorrespondence);
+        })->get());
     }
 
     public function getUser($id)
@@ -40,6 +45,62 @@ class UserController extends Controller
         return new UserCollection(User::with('student')->where('tipo', '=', 'administrativo')->get());
     }
 
+    public function createUser(RegisterRequest $request)
+    {
+        DB::beginTransaction();
+        //Validar el registro
+        $data = $request->validated();
+
+        try {
+            //FotoPerfil
+            $perfil = $request->file("perfil");
+            $extension = $perfil->getClientOriginalExtension();
+            $namePerfil = Str::random(36) . '.' . $extension;
+            Storage::disk('local')->put('/public/perfiles/' . $namePerfil, file_get_contents($perfil));
+            $estado = 'activo';
+            //Crear el usuario y estudiante
+            if ($data['tipo'] === 'administrativo') {
+                $estado = 'Sin activar';
+            }
+
+            if ($data['tipo'] === 'colaborador') {
+                $estado = 'Sin activar';
+            }
+
+            $user = User::create([
+                'ci' => $data['ci'],
+                'nombres' => $data['name'],
+                'apellidoPaterno' => $data['app'],
+                'apellidoMaterno' => $data['apm'],
+                'tipo' => $data['tipo'],
+                'estado' => $estado,
+                'imagen' => $namePerfil,
+                'fechaNacimiento' => $data['date'],
+                'email' => $data['email'],
+                'password' => bcrypt($data['password'])
+            ]);
+
+            if ($data['tipo'] == 'estudiante') {
+                Student::create([
+                    'user_id' => $user['id'],
+                    'ru' => $data['ru'],
+                    'mention_id' => $data['mencion']
+                ]);
+            }
+
+            DB::commit();
+            $user->imagen = asset('storage/perfiles/' . $user->imagen);
+            return [
+                'message' => 'Usuario creado correctamente'
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response([
+                'errors' => ['Ocurrio algo inesperado con el servidor: ' . $e->getMessage()]
+            ], 422);
+        }
+    }
+
     public function editUser($id, Request $request)
     {
 
@@ -52,7 +113,7 @@ class UserController extends Controller
                 'ci' => ['required', 'string', 'unique:users,ci,' . $id],
                 'ru' => ['required', 'string', 'unique:students,ru,' . $id],
                 'mencion' => ['required', 'string'],
-                'email' => ['required', 'email', 'unique:users,email,'.$id],
+                'email' => ['required', 'email', 'unique:users,email,' . $id],
                 'tipo' => ['required']
             ],
             [
@@ -80,9 +141,9 @@ class UserController extends Controller
             //Verificando documento  
             $rutaArchivo =  'public/perfiles/' . $user->imagen;
             // $infoArchivo = pathinfo($rutaArchivo);
-    
+
             $perfil = $request->file("perfil");
-    
+
             // $nameDocumento = $documento->getClientOriginalName();
             if ($perfil != null) {
                 Storage::delete($rutaArchivo);
@@ -91,7 +152,7 @@ class UserController extends Controller
                 Storage::disk('local')->put('/public/perfiles/' . $namePerfil, file_get_contents($perfil));
                 $user->imagen = $namePerfil;
             }
-    
+
             $user->nombres = $request->name;
             $user->apellidoPaterno = $request->app;
             $user->apellidoMaterno = $request->apm;
@@ -99,14 +160,14 @@ class UserController extends Controller
             $user->fechaNacimiento = $request->date;
             $user->email = $request->email;
             $user->tipo = $request->tipo;
-    
+
             if ($request->mencion != 'Sin mencion') {
                 $student = Student::find($request->id);
                 $student->ru = $request->ru;
                 $student->mention_id = $request->mencion;
                 $student->save();
             }
-    
+
             $user->save();
             DB::commit();
             return [
@@ -115,23 +176,46 @@ class UserController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             return response([
-                'errors' => ['Ocurrio algo inesperado con el servidor: '.$th->getMessage()]
+                'errors' => ['Ocurrio algo inesperado con el servidor: ' . $th->getMessage()]
             ], 422);
         }
-       
     }
+
+
 
     public function deleteUser($id)
     {
-        $user = User::find($id);
-        $user->delete();
+        DB::beginTransaction();
 
-        return [
-            "message" => "Usuario eliminado"
-        ];
+        try {
+            $user = User::find($id);
+            $rutaArchivo =  'public/perfiles/' . $user->imagen;
+            
+            $money_box = MoneyBox::find(1);
+
+            if ($money_box->user_id === $user->id) {
+                $money_box->user_id = null;
+            }
+
+            $money_box->save();
+            
+            $user->delete();
+            Storage::delete($rutaArchivo);
+
+            DB::commit();
+            return [
+                "message" => "Usuario eliminado"
+            ];
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response([
+                'errors' => ['Ocurrio algo inesperado con el servidor: ' . $th->getMessage()]
+            ], 422);
+        }
     }
 
-    public function activatedUser($id) {
+    public function activatedUser($id)
+    {
         $user = User::find($id);
         $user->estado = 'activo';
         $user->save();

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TeacherRequest;
 use App\Http\Resources\TeacherCollection;
+use App\Models\MoneyBox;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
 {
@@ -50,10 +52,30 @@ class TeacherController extends Controller
 
     public function deleteTeacher ($id) {
         
-        $teacher = Teacher::find($id);
-        $teacher->delete();
-        return [
-            "message" => "Docente eliminado correctamente"
-        ];
+        DB::beginTransaction();
+
+        try {
+            $teacher = Teacher::find($id);
+            $money_box = MoneyBox::find(1);
+
+            if ($money_box->director_user_id === $teacher->id) {
+                $money_box->director_user_id = null;
+            }
+
+            $money_box->save();
+            $teacher->delete();
+
+            DB::commit();
+            return [
+                "message" => "Docente eliminado correctamente"
+            ];
+            
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response([
+                'errors' => ['Ocurrio algo inesperado con el servidor: ' . $th->getMessage()]
+            ], 422);
+        }
+        
     }
 }

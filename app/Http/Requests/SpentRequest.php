@@ -22,7 +22,7 @@ class SpentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "gasto" => ["required","numeric","regex:/^[\d]{0,8}(\.[\d]{1,2})?$/"],
+            "gasto" => ["required","numeric","regex:/^[\d]{0,8}(\.[\d]{1,2})?$/",'min:1'],
             "nro" => ["required", "string",'unique:spents,nro'],
             "nroFactura" => ["required", "string",'unique:spents,nroFactura'],
             "custodio" => ["required"],
@@ -43,6 +43,8 @@ class SpentRequest extends FormRequest
             "descripcion.string" => "La descripcion debe de ser una cadena de caracteres",
             "gasto.required" => "El gasto es obligatorio",
             "gasto.numeric" => "El gasto debe de ser un numero",
+            "gasto.regex" => "El gasto no tiene el formato correcto",
+            "gasto.min" => "El gasto no puede ser 0 Bs.",
             "custodio" => "El custodio es requerido",
         ];
     }

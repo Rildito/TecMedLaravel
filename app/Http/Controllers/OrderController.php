@@ -106,8 +106,10 @@ class OrderController extends Controller
 
         foreach ($order[0]->materials as $material) {
             $materialDataBase = Material::find($material['id']);
-            $materialDataBase->cantidad_utilizada = $materialDataBase->cantidad_utilizada + $material->pivot->cantidad;
-            $materialDataBase->save();
+            if ($order[0]->estado !== 'Finalizado') {
+                $materialDataBase->cantidad_utilizada += $material->pivot->cantidad;
+                $materialDataBase->save();
+            }
         }
 
         $order[0]->delete();

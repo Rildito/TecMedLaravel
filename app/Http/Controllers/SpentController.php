@@ -59,7 +59,7 @@ class SpentController extends Controller
                 "descripcion" => $data['descripcion'],
                 "gasto" => $data['gasto'],
                 "interested_id" => $data['custodio'],
-                "ingreso" => $request['ingreso'] !== '' ? $request['ingreso'] : ''
+                "ingreso" => $request['ingreso']
             ]);
 
             $moneyBox->monto = $moneyBox->monto - $spent->gasto;
@@ -83,7 +83,7 @@ class SpentController extends Controller
 
         try {
             $request->validate([
-                "gasto" => ["required", "numeric", "regex:/^[\d]{0,8}(\.[\d]{1,2})?$/"],
+                "gasto" => ["required", "numeric", "regex:/^[\d]{0,8}(\.[\d]{1,2})?$/",'min:1'],
                 "nro" => ["required", "string", 'unique:spents,nro,' . $id],
                 "nroFactura" => ["required", "string", 'unique:spents,nroFactura,' . $id],
                 "custodio" => ["required"],
@@ -99,6 +99,8 @@ class SpentController extends Controller
                 "descripcion.string" => "La descripcion debe de ser una cadena de caracteres",
                 "gasto.required" => "El gasto es obligatorio",
                 "gasto.numeric" => "El gasto debe de ser un numero",
+                "gast.min" => "El gasto no puede ser de 0 Bs.",
+                "gasto.regex" => "El gasto no tiene el formato correcto",
                 "custodio" => "El custodio es requerido",
             ]);
 
@@ -115,17 +117,20 @@ class SpentController extends Controller
             $spent->interested_id = $request->custodio;
             $spent->gasto = $request->gasto;
             $spent->nroFactura = null;
+
             if ($request->nroFactura !== 'Sin factura') {
                 $spent->nroFactura = $request->nroFactura;
             }
-            $spent->nro = $request->nro;
-            if ($request->ingreso !== '') {
-                if ($spent->ingreso !== '0.00') {
-                    $moneyBox->monto -= $spent->ingreso;
-                }
-                $spent->ingreso = $request->ingreso;
-                $moneyBox->monto += $spent->ingreso;
+
+            if ($request->ingreso === 'si' && $spent->ingreso === 'no') {
+                $moneyBox->monto += $request->gasto;
+            } else if ($request->ingreso === 'no' && $spent->ingreso === 'si') {
+                $moneyBox->monto -= $request->gasto;
             }
+
+            $spent->nro = $request->nro;
+
+            $spent->ingreso = $request->ingreso;
 
             $spent->save();
             $moneyBox->save();

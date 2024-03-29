@@ -25,9 +25,9 @@ class MoneyBoxController extends Controller
         foreach ($spents as $spent) {
             $gastos += $spent->gasto;
             $montoInicial -= $spent->gasto;
-            if ($spent->ingreso !== '0.00') {
-                $montoInicial += number_format($spent->ingreso, 2);
-                $gastos -= number_format($spent->ingreso, 2);
+            if ($spent->ingreso === 'si') {
+                $montoInicial += number_format($spent->gasto, 2);
+                $gastos -= number_format($spent->gasto, 2);
             }
         }
 
@@ -51,17 +51,18 @@ class MoneyBoxController extends Controller
         $gastos = 0;
 
         foreach ($spentsRecharges as $spentRecharge) {
-            $spentRecharge->saldo = '';
             if (isset($spentRecharge->estado)) { //recarga
                 $montoInicial += floatval($spentRecharge->montoRecarga);
                 $spentRecharge->saldo = $montoInicial;
                 $gastos -= $spentRecharge->montoRecarga;
             } else { //gasto
-                $montoInicial += number_format(($spentRecharge->ingreso), 2);
-                $spentRecharge->saldo = number_format(($montoInicial - $spentRecharge->gasto), 2);
+                if ($spentRecharge->ingreso === 'si') {
+                    $montoInicial += number_format(($spentRecharge->gasto), 2);
+                    $gastos -= number_format(($spentRecharge->gasto),2);
+                }
                 $montoInicial = number_format(($montoInicial - $spentRecharge->gasto), 2);
+                $spentRecharge->saldo = $montoInicial;
                 $gastos += $spentRecharge->gasto;
-                $gastos -= $spentRecharge->ingreso;
             }
         }
         return [
@@ -114,11 +115,14 @@ class MoneyBoxController extends Controller
             }
 
             if (isset($spentRecharge->fechaCreacion)) { //gasto
-                $montoInicial += number_format(($spentRecharge->ingreso), 2);
+                if ($spentRecharge->ingreso === 'si') {
+                    $montoInicial += number_format(($spentRecharge->gasto), 2);
+                    $gastoInicial -= number_format($spentRecharge->gasto, 2);
+                }
                 $montoInicial -= number_format($spentRecharge->gasto, 2);
                 $gastoInicial += number_format($spentRecharge->gasto, 2);
-                $gastoInicial -= number_format($spentRecharge->ingreso, 2);
-            } else {
+                
+            } else { //Reembolso
                 $montoInicial += number_format($spentRecharge->montoRecarga);
                 $gastoInicial -= number_format($spentRecharge->montoRecarga, 2);
             }
@@ -166,7 +170,7 @@ class MoneyBoxController extends Controller
         $pdf->Cell(20, 10, number_format($montoInicial, 2) . ' Bs.', 1, 0, 'C');
         $pdf->Ln();
 
-        $pdf->SetFont('Arial', '', 10);
+        $pdf->SetFont('Arial', '', 8);
         //Gastos que se realizaron entre fechas
         $spents = [];
 
@@ -190,21 +194,34 @@ class MoneyBoxController extends Controller
 
                 $montoInicial -= number_format($spent->gasto, 2);
                 $gastoInicial += number_format($spent->gasto, 2);
-                $montoInicial += number_format($spent->ingreso, 2);
-                $gastoInicial -= number_format($spent->ingreso, 2);
+
+                if ($spent->ingreso === 'si') {
+                    $montoInicial += number_format($spent->gasto, 2);
+                    $gastoInicial -= number_format($spent->gasto, 2);
+                }
 
                 $data[] = [
                     $spent->nro,
                     $fechaCambiada->format('d-m-Y'),
-                    isset($spent->nroFactura) && $spent->nroFactura !== '' ? $spent->nroFactura : 'Sin factura',
+                    $spent->nroFactura !== '' ? $spent->nroFactura : 'Sin factura',
                     iconv('UTF-8', 'windows-1252', $spent->descripcion),
                     iconv('UTF-8', 'windows-1252', $spent->interested->nombreCompleto),
-                    $spent->ingreso === '0.00' ? '' : number_format($spent->ingreso, 2),
+                    $spent->ingreso === 'no' ? '' : number_format($spent->gasto, 2),
                     number_format($spent->gasto, 2) . ' Bs.',
-                    number_format($montoInicial + $spent->montoInicial, 2) . 'Bs.'
+                    number_format($montoInicial,2) . 'Bs.'
                 ];
+
             } else { //desembolso
-                $data[] = ['', $fechaCambiada->format('d-m-Y'), '', 'DESEMBOLSO CAJA CHICA:', '', $spent->montoRecarga . ' Bs.', '', $montoInicial + $spent->montoRecarga . ' Bs.'];
+                $data[] = [
+                    '', 
+                    $fechaCambiada->format('d-m-Y'), 
+                    '', 
+                    'DESEMBOLSO CAJA CHICA:', 
+                    '', 
+                    $spent->montoRecarga . ' Bs.', 
+                    '', 
+                    $montoInicial + $spent->montoRecarga . ' Bs.'
+                ];
                 $gastoInicial -= number_format($spent->montoRecarga, 2);
                 $montoInicial += number_format($spent->montoRecarga, 2);
             }
@@ -213,8 +230,8 @@ class MoneyBoxController extends Controller
         //         $data[] = ['1', 'Dato ', 'Dato ', Str::random(rand(1, 250)), 'Dato 1', 'Dato 2','Dato','Dato'];
         //     };
         for ($i = 0; $i < count($data); $i++)
-            $pdf->Row(array($data[$i][0], $data[$i][1], $data[$i][2], $data[$i][3], $data[$i][4], $data[$i][5], $data[$i][6], $data[$i][7],));
-
+            $pdf->Row(array($data[$i][0], $data[$i][1], $data[$i][2], $data[$i][3], $data[$i][4], $data[$i][5], $data[$i][6], $data[$i][7]));
+        
         $pdf->SetFont('Arial', 'B', 8);
         $pdf->Cell(270, 10, 'SALDO Y GASTO (DESPUES DE FECHAS)', 1, 0, 'C');
         $pdf->Cell(20, 10, '', 1, 0, 'C');

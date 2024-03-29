@@ -139,6 +139,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/managers', [UserController::class, 'getAdministrativos']); 
 
+    //RegisterAdmin
+
+    Route::post('/registroUsuario',[UserController::class,'createUser']);
+
 });
 
 

@@ -93,9 +93,9 @@ class AuthController extends Controller
                 'password' => bcrypt($data['password'])
             ]);
 
-            if ($data['tipo'] == 'estudiante') {
+            if ($data['tipo'] === 'estudiante') {
                 Student::create([
-                    'id' => $user['id'],
+                    'user_id' => $user['id'],
                     'ru' => $data['ru'],
                     'mention_id' => $data['mencion']
                 ]);

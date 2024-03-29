@@ -24,7 +24,8 @@ class UnitController extends Controller
     public function createUnit (UnitRequest $request) {
         $data = $request->validated();
         Unit::create([
-            'nombre' => $data['nombre']
+            'nombre' => $data['nombre'],
+            'area' => $data['area']
         ]);
 
         return [
@@ -34,13 +35,16 @@ class UnitController extends Controller
 
     public function editUnit ($id, Request $request) {
         $request->validate([
-            'nombre' => ['required','unique:units,nombre,'.$id]
+            'nombre' => ['required','unique:units,nombre,'.$id],
+            'area' => ['required']
         ],[
             'nombre.required' => 'El nombre es obligatorio',
             'nombre.unique' => 'Ya existe un nombre con ese registro',
+            'area' => 'El area es obligatoria'
         ]);
         $unit = Unit::find($id);
         $unit->nombre = $request->nombre;
+        $unit->area = $request->area;
         $unit->save();
         return [
             "message" => "Unidad editada correctamente"

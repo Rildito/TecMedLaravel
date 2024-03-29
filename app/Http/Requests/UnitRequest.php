@@ -22,7 +22,8 @@ class UnitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => ['required','unique:units,nombre']
+            'nombre' => ['required','unique:units,nombre'],
+            'area' => ['required']
         ];
     }
 
@@ -30,7 +31,8 @@ class UnitRequest extends FormRequest
     {
         return [
             'nombre.required' => 'El nombre es obligatorio',
-            'nombre.unique' => 'Ya existe un registro con ese nombre'
+            'nombre.unique' => 'Ya existe un registro con ese nombre',
+            'area.required' => 'El area es requerida'
         ];
     }
 }

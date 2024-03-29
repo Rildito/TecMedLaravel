@@ -17,17 +17,17 @@ class CorrespondenceController extends Controller
 {
     public function getCorrespondencesReceived()
     {
-        return new CorrespondenceCollection(Correspondence::with('unit')->where('tipo', 'recibida')->where('estado','!=','eliminado')->get());
+        return new CorrespondenceCollection(Correspondence::with('unit')->where('tipo', 'recibida')->where('estado', '!=', 'eliminado')->get());
     }
 
     public function getCorrespondencesRecover()
     {
-        return new CorrespondenceCollection(Correspondence::with('unit')->where('estado','eliminado')->get());
+        return new CorrespondenceCollection(Correspondence::with('unit')->where('estado', 'eliminado')->get());
     }
 
     public function getCorrespondencesDespachada()
     {
-        return new CorrespondenceCollection(Correspondence::with('unit')->where('tipo', 'despachada')->where('estado','!=','eliminado')->get());
+        return new CorrespondenceCollection(Correspondence::with('unit')->where('tipo', 'despachada')->where('estado', '!=', 'eliminado')->get());
     }
 
     public function getIdentificador()
@@ -94,7 +94,7 @@ class CorrespondenceController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return response([
-                'errors' => ['Ocurrio algo inesperado con el servidor: '.$e->getMessage()]
+                'errors' => ['Ocurrio algo inesperado con el servidor: ' . $e->getMessage()]
             ], 422);
         }
     }
@@ -143,7 +143,7 @@ class CorrespondenceController extends Controller
             $correspondence->unit_id = $request->unit_id;
             $correspondence->estado = $request->estado;
 
-            if ($request->estado === 'Entregado') {
+            if ($request->estado === 'Entregado' && !isset($correspondence->fechaEntregado)) {
                 $correspondence->fechaEntregado = Carbon::now();
             }
             $correspondence->save();
@@ -155,7 +155,7 @@ class CorrespondenceController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             return response([
-                'errors' => ['Ocurrio algo inesperado con el servidor: '.$th->getMessage()]
+                'errors' => ['Ocurrio algo inesperado con el servidor: ' . $th->getMessage()]
             ], 422);
         }
     }
@@ -185,7 +185,8 @@ class CorrespondenceController extends Controller
         ];
     }
 
-    public function confirmDeleteCorrespondence ($id) {
+    public function confirmDeleteCorrespondence($id)
+    {
         $correspondence = Correspondence::find($id);
         $correspondence->delete();
 
@@ -201,7 +202,7 @@ class CorrespondenceController extends Controller
     {
         $fechaInicial = Carbon::parse($dateOne);
         $fechaFinal = Carbon::parse($dateTwo);
-        $correspondenciasObtenidas = Correspondence::with('unit')->where('tipo', $tipoCorrespondence)->where('estado','!=','eliminado')->get();
+        $correspondenciasObtenidas = Correspondence::with('unit')->where('tipo', $tipoCorrespondence)->where('estado', '!=', 'eliminado')->get();
         $correspondencias = [];
 
         foreach ($correspondenciasObtenidas as $correspondences) {
@@ -230,7 +231,7 @@ class CorrespondenceController extends Controller
         $pdf->Cell(330, 8, iconv('UTF-8', 'windows-1252', 'DEL ' . $fechaMostrarOne . ' AL ' . $fechaMostrarTwo), 0, 1, 'C');
         $pdf->Ln();
         // Definir encabezados de la tabla
-        $header = array('Fecha', 'Entregado a ', 'Nombre','Identificador', 'Descripcion');
+        $header = array('Fecha', 'Entregado a ', 'Nombre', 'Identificador', 'Descripcion');
 
         // Definir datos de la tabla
         $data = [];
@@ -243,19 +244,20 @@ class CorrespondenceController extends Controller
 
             // $data[] = [$fechaCambiada->format('d-m-Y'), $correspondencia->receptor ? iconv('UTF-8', 'windows-1252', $correspondencia->receptor) : 'Sin receptor', iconv('UTF-8', 'windows-1252', $correspondencia->nombre),iconv('UTF-8', 'windows-1252', $correspondencia->unit->nombre),$correspondencia->hojaDeRuta, iconv('UTF-8', 'windows-1252', $correspondencia->descripcion), $correspondencia->estado];
             $data[] = [
-                $fechaCambiada->format('d-m-Y'), 
-                $correspondencia->receptor ? iconv('UTF-8', 'windows-1252', $correspondencia->receptor) : 'Sin receptor', iconv('UTF-8', 'windows-1252', $correspondencia->nombre),$correspondencia->hojaDeRuta, 
-                iconv('UTF-8', 'windows-1252', $correspondencia->descripcion)];
+                $fechaCambiada->format('d-m-Y'),
+                $correspondencia->receptor ? iconv('UTF-8', 'windows-1252', $correspondencia->receptor) : 'Sin receptor', iconv('UTF-8', 'windows-1252', $correspondencia->nombre), $correspondencia->hojaDeRuta,
+                iconv('UTF-8', 'windows-1252', $correspondencia->descripcion)
+            ];
         };
         // Establecer anchuras de las columnas
-        $widths = array(30, 40, 40,40, 180);
-        $aligns = array('C', 'C', 'C','C', 'C');
+        $widths = array(30, 40, 40, 40, 180);
+        $aligns = array('C', 'C', 'C', 'C', 'C');
         $pdf->SetWidths($widths); //330
         $pdf->SetAligns($aligns);
 
         // Agregar encabezados de tabla
         $pdf->SetFont('Arial', 'B', 10);
-        
+
         for ($i = 0; $i < count($header); $i++) {
             $pdf->Cell($widths[$i], 10, $header[$i], 1, 0, 'C');
         }
