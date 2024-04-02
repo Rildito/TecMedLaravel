@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/correspondences/received', [CorrespondenceController::class, 'getCorrespondencesReceived']);
     Route::get('/correspondences/despachada', [CorrespondenceController::class, 'getCorrespondencesDespachada']);
     Route::get('/correspondences/recover', [CorrespondenceController::class, 'getCorrespondencesRecover']);
+    Route::get('/correspondences/notifications', [CorrespondenceController::class, 'getCorrespondencesNotifications']);
     Route::get('/correspondences/{id}', [CorrespondenceController::class, 'getCorrespondenceId']);
     Route::get('/correspondences/{id}/{id2}/{tipo}', [CorrespondenceController::class, 'getCorrespondenceDocument']);
     Route::post('/correspondences/recover/{id}', [CorrespondenceController::class, 'correspondenceRecover']);

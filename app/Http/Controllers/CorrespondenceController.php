@@ -6,6 +6,7 @@ use App\Http\Requests\CorrespondenceRequest;
 use App\Http\Resources\CorrespondenceCollection;
 use App\Models\Correspondence;
 use App\Models\Document;
+use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -30,6 +31,11 @@ class CorrespondenceController extends Controller
         return new CorrespondenceCollection(Correspondence::with('unit')->where('tipo', 'despachada')->where('estado', '!=', 'eliminado')->get());
     }
 
+    public function getCorrespondencesNotifications() {
+        $fechaActual = Carbon::now()->subDays(3);
+        $correspondences = Correspondence::where('created_at','<',$fechaActual)->where('estado','!=','Finalizado')->where('estado','!=','Archivado')->where('estado','!=','Eliminado')->get();
+        return $correspondences;
+    }
     public function getIdentificador()
     {
 
@@ -48,6 +54,8 @@ class CorrespondenceController extends Controller
     public function getCorrespondenceId($id)
     {
         $correspondence = Correspondence::with('unit')->find($id);
+        $unidadesArea = Unit::where('area','=',$correspondence->unit->area)->get();
+        $correspondence->unidades=$unidadesArea;
         return $correspondence;
     }
 

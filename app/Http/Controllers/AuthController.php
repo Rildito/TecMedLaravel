@@ -51,9 +51,21 @@ class AuthController extends Controller
             $user->encargado_caja_chica = 'No es encargado';
         };
 
+        $userEnviar = [
+            'apellidoMaterno' => $user->apellidoMaterno,
+            'apellidoPaterno' => $user->apellidoPaterno,
+            'email' => $user->email,
+            'encargado_caja_chica' => $user->encargado_caja_chica,
+            'estado' => $user->estado,
+            'fechaNacimiento' => $user->fechaNacimiento,
+            'id' => $user->id,
+            'imagen' => $user->imagen,
+            'nombres' => $user->nombres,
+            'tipo' => $user->tipo,
+        ];
         return [
             'token' => $token,
-            'user' => $user,
+            'user' => $userEnviar,
         ];
     }
 
@@ -103,9 +115,22 @@ class AuthController extends Controller
 
             DB::commit();
             $user->imagen = asset('storage/perfiles/' . $user->imagen);
+
+            $userEnviar = [
+                'apellidoMaterno' => $user->apellidoMaterno,
+                'apellidoPaterno' => $user->apellidoPaterno,
+                'email' => $user->email,
+                'encargado_caja_chica' => $user->encargado_caja_chica,
+                'estado' => $user->estado,
+                'fechaNacimiento' => $user->fechaNacimiento,
+                'id' => $user->id,
+                'imagen' => $user->imagen,
+                'nombres' => $user->nombres,
+                'tipo' => $user->tipo,
+            ];
             return [
                 "token" => $user->createToken('token')->plainTextToken,
-                "user" => $user,
+                'user' => $userEnviar,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
