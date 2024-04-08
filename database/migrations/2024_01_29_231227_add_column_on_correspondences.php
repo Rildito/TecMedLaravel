@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('correspondences', function (Blueprint $table) {
             $table->unsignedBigInteger('unit_id')->nullable();
-            $table->foreign('unit_id')->references('id')->on('units')->constrained();
+            $table->foreign('unit_id')->references('id')->on('units');
         });
     }
 

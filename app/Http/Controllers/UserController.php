@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password as PasswordRules;
 
 class UserController extends Controller
 {
@@ -34,7 +36,7 @@ class UserController extends Controller
 
     public function getUser($id)
     {
-        $user = User::with('student')->find($id);
+        $user = User::with('student.mention')->find($id);
         $rutaArchivo =  asset('storage/perfiles/' . $user->imagen);
         $user->imagen = $rutaArchivo;
         return $user;
@@ -89,7 +91,6 @@ class UserController extends Controller
             }
 
             DB::commit();
-            $user->imagen = asset('storage/perfiles/' . $user->imagen);
             return [
                 'message' => 'Usuario creado correctamente'
             ];
@@ -103,7 +104,6 @@ class UserController extends Controller
 
     public function editUser($id, Request $request)
     {
-
         $request->validate(
             [
                 'name' => ['required', 'string'],
@@ -111,7 +111,7 @@ class UserController extends Controller
                 'apm' => ['required', 'string'],
                 'date' => ['required', 'date'],
                 'ci' => ['required', 'string', 'unique:users,ci,' . $id],
-                'ru' => ['required', 'string', 'unique:students,ru,' . $id],
+                'ru' => ['required', 'string', Rule::unique('students', 'ru')->ignore($id, 'user_id')],
                 'mencion' => ['required', 'string'],
                 'email' => ['required', 'email', 'unique:users,email,' . $id],
                 'tipo' => ['required']
@@ -162,7 +162,7 @@ class UserController extends Controller
             $user->tipo = $request->tipo;
 
             if ($request->mencion != 'Sin mencion') {
-                $student = Student::find($request->id);
+                $student = Student::where('user_id','=',$request->id)->first();
                 $student->ru = $request->ru;
                 $student->mention_id = $request->mencion;
                 $student->save();
@@ -222,5 +222,33 @@ class UserController extends Controller
         return [
             'message' => 'Usuario activado correctamente'
         ];
+    }
+
+    public function recoverPassword($id) {
+        $user = User::find($id);
+        $user->resetear = '1';
+        $user->password = bcrypt($user->ci);
+        $user->save();
+        return [
+            'message' => 'Contraseña reseteada correctamente'
+        ];
+    }
+
+    public function updatePassword(Request $request) {
+        
+
+        $data = $request->validate([
+            'password' => ['required', 'confirmed', PasswordRules::min(8)->letters()->symbols()->numbers()],
+        ], [
+            'password' => 'El password debe contener al menos 8 caracteres, un simbolo y un número',
+        ]);
+
+        $usuario = User::find($request->id);
+        $usuario->password = bcrypt($data['password']);
+        $usuario->resetear = '0';
+        $usuario->save();
+        $rutaArchivo = asset('storage/perfiles/' . $usuario->imagen);
+        $usuario->imagen = $rutaArchivo;
+        return ['user' => $usuario];
     }
 }

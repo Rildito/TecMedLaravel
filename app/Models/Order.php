@@ -20,7 +20,7 @@ class Order extends Model
     }
     
     public function student() {
-        return $this->hasOne(Student::class, 'id', 'user_id'); //TODO: Revisar si envia bien
+        return $this->hasOne(Student::class, 'id', 'user_id');
     }
 
     public function subject() {
@@ -35,25 +35,5 @@ class Order extends Model
         return $this->belongsToMany(Material::class, 'order_materials')->withPivot('cantidad');
     }
 
-    
-    // public function user() {
-    //     return $this->belongsTo(User::class);
-    // }
-    
-    // public function student() {
-    //     return $this->belongsTo(Student::class, 'user_id');
-    // }
-
-    // public function subject() {
-    //     return $this->belongsTo(Subject::class);
-    // }
-
-    // public function teacher() {
-    //     return $this->belongsTo(Teacher::class);
-    // }
-
-    // public function materials () {
-    //     return $this->belongsToMany(Material::class, 'order_materials')->withPivot('cantidad');
-    // }
     use HasFactory;
 }

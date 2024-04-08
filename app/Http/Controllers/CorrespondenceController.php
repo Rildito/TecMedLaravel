@@ -54,7 +54,7 @@ class CorrespondenceController extends Controller
     public function getCorrespondenceId($id)
     {
         $correspondence = Correspondence::with('unit')->find($id);
-        $unidadesArea = Unit::where('area','=',$correspondence->unit->area)->get();
+        $unidadesArea = Unit::where('area','=',isset($correspondence->unit->area) ? $correspondence->unit->area : null)->get();
         $correspondence->unidades=$unidadesArea;
         return $correspondence;
     }

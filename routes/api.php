@@ -29,10 +29,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     Route::get('/user', function (Request $request) {
         return $request->user();
-    }); 
+    });
     Route::post('/logout', [AuthController::class, 'logout']);
 
     //Orders
@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'getOrderId']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::post('/orders/{id}', [OrderController::class, 'confirmOrder']);
-    Route::delete('/orders/{id}', [OrderController::class, 'deleteOrder']); 
+    Route::delete('/orders/{id}', [OrderController::class, 'deleteOrder']);
 
     //Correspondece
 
@@ -56,13 +56,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/correspondences/{id}', [CorrespondenceController::class, 'editCorrespondence']);
     Route::delete('/correspondences/{id}', [CorrespondenceController::class, 'deleteCorrespondence']);
     Route::delete('/correspondences/recover/delete/{id}', [CorrespondenceController::class, 'confirmDeleteCorrespondence']);
-    
+
     //Colaborators
     Route::post('/collaborators', [CollaborationsController::class, 'addCollaborator']);
     Route::get('/collaborators/{idCorrespondence}', [CollaborationsController::class, 'getCollaborators']);
     Route::get('/collaborator/{idCorrespondence}/{idUserCreator}', [CollaborationsController::class, 'getCollaborator']);
     Route::get('/collaborators/correspondences/{id}', [CollaborationsController::class, 'getCollaboratorsCorrespondences']);
-    
+
     //Responses
     Route::get('/response/{idResponse}', [ResponseController::class, 'getResponse']);
     Route::post('/response', [ResponseController::class, 'createResponse']);
@@ -99,17 +99,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/interesteds', [InterestedController::class, 'createInterested']);
     Route::put('/interesteds/{id}', [InterestedController::class, 'editInterested']);
     Route::delete('/interesteds/{id}', [InterestedController::class, 'deleteInterested']);
-    
+
     //Users
-    Route::get('/users', [ UserController::class, 'getUsers']);
-    Route::get('/users/activated', [ UserController::class, 'getUsersActivated']);
-    Route::put('/users/activated/{id}', [ UserController::class, 'activatedUser']);
-    Route::get('/users/{id}', [ UserController::class, 'getUser']);
-    Route::post('/users/{id}', [ UserController::class, 'editUser']);
-    Route::delete('/users/{id}', [ UserController::class, 'deleteUser']);
+    Route::get('/users', [UserController::class, 'getUsers']);
+    Route::get('/users/activated', [UserController::class, 'getUsersActivated']);
+    Route::put('/users/activated/{id}', [UserController::class, 'activatedUser']);
+    Route::put('/users/recover_password/{id}', [UserController::class, 'recoverPassword']);
+    Route::put('/users/update_password', [UserController::class, 'updatePassword']);
+    Route::get('/users/{id}', [UserController::class, 'getUser']);
+    Route::post('/users/{id}', [UserController::class, 'editUser']);
+    Route::delete('/users/{id}', [UserController::class, 'deleteUser']);
+    
     Route::get('/collaborators-available/{id}', [UserController::class, 'getCollaboratorsAvailable']);
     
     //Subject
+    Route::get('/subjects', [SubjectController::class, 'getSubjects']);
     Route::get('/subjects/{id}', [SubjectController::class, 'getSubject']);
     Route::post('/subjects', [SubjectController::class, 'createSubject']);
     Route::put('/subjects/{id}', [SubjectController::class, 'editSubject']);
@@ -117,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Units
 
+    Route::get('/units', [UnitController::class, 'getUnits']);
     Route::get('/units/{id}', [UnitController::class, 'getUnit']);
     Route::get('/units/selected/{unidad}', [UnitController::class, 'getUnitsSelected']);
     Route::post('/units', [UnitController::class, 'createUnit']);
@@ -125,6 +130,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Teachers
 
+    Route::get('/teachers', [TeacherController::class, 'getTeachers']);
     Route::get('/teachers/{id}', [TeacherController::class, 'getTeacher']);
     Route::post('/teachers', [TeacherController::class, 'createTeacher']);
     Route::put('/teachers/{id}', [TeacherController::class, 'editTeacher']);
@@ -132,18 +138,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Materials
 
+    Route::get('/materials', [MaterialController::class, 'getMaterials']);
+    Route::get('/materials/student', [MaterialController::class, 'getMaterialsStudent']);
+    Route::get('/materials/{id}', [MaterialController::class, 'getMaterialId']);
     Route::post('/materials', [MaterialController::class, 'createMaterial']);
     Route::post('/materials/{id}', [MaterialController::class, 'editMaterial']);
     Route::delete('/materials/{id}', [MaterialController::class, 'deleteMaterial']);
 
     //Encargados
 
-    Route::get('/managers', [UserController::class, 'getAdministrativos']); 
+    Route::get('/managers', [UserController::class, 'getAdministrativos']);
 
     //RegisterAdmin
 
-    Route::post('/registroUsuario',[UserController::class,'createUser']);
-
+    Route::post('/registroUsuario', [UserController::class, 'createUser']);
 });
 
 
@@ -153,13 +161,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/recuperar-contrasenia', [AuthController::class, 'recover_password']);
 Route::post('/reestablecer-contrasenia', [AuthController::class, 'upgrade_password']);
 
-//Materials
-Route::get('/materials', [MaterialController::class, 'getMaterials']);
-Route::get('/materials/{id}', [MaterialController::class, 'getMaterialId']);
 
-//Seeders
-Route::get('/teachers', [TeacherController::class, 'getTeachers']);
-Route::get('/subjects', [SubjectController::class, 'getSubjects']);
 
-//Unidades
-Route::get('/units', [UnitController::class, 'getUnits']);
+
+
+
+

@@ -17,6 +17,11 @@ class MaterialController extends Controller
         return new MaterialCollection(Material::all());
     }
 
+    public function getMaterialsStudent()
+    {
+        return new MaterialCollection(Material::where('estado','disponible')->get());
+    }
+
     public function getMaterialId($id)
     {
         $material = Material::find($id);
@@ -102,7 +107,8 @@ class MaterialController extends Controller
     {
         $material = Material::find($id);
         $material->delete();
-
+        $rutaArchivo =  'public/materiales/' . $material->imagen;
+        Storage::delete($rutaArchivo);
         return [
             "message" => "Material eliminado correctamente"
         ];

@@ -16,7 +16,7 @@ class OrderResource extends JsonResource
     public function toArray(Request $request): array
 
     {   
-        // return parent::toArray($request);
+        //return parent::toArray($request);
 
         $materiales = [];
 
@@ -31,10 +31,10 @@ class OrderResource extends JsonResource
         
         $ru = '';
         $mencion = '';
-        
-        if(Student::find($this->user->id)) {
-            $ru = $this->student->ru;
-            $mencion = $this->student->mention->nombre;
+        $student = Student::where('user_id','=',$this->user->id)->first();
+        if( isset($student) && $this->user_id === $student->user_id) {
+            $ru = $this->user->student->ru;
+            $mencion = $this->user->student->mention->nombre;
         }else {
             $ru = 'Sin ru';
             $mencion = 'Sin mencion';

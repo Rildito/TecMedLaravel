@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UnitRequest;
 use App\Http\Resources\UnitCollection;
+use App\Models\Correspondence;
 use App\Models\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use PhpParser\Node\Stmt\TryCatch;
 
 class UnitController extends Controller
 {
@@ -52,11 +55,23 @@ class UnitController extends Controller
     }
 
     public function deleteunit ($id) {
-        
-        $unit = Unit::find($id);
-        $unit->delete();
-        return [
-            "message" => "Unidad eliminada correctamente"
-        ];
+
+        DB::beginTransaction();
+        try {
+            
+            $unit = Unit::find($id);
+            Correspondence::where('unit_id', $unit['id'])->update(['unit_id' => null]);
+            $unit->delete();
+            DB::commit();
+            return [
+                "message" => "Unidad eliminada correctamente"
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response([
+                'errors' => ['Ocurrio algo inesperado con el servidor: ' . $e->getMessage()]
+            ], 422);
+        }
+       
     }
 }

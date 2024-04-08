@@ -20,8 +20,8 @@ class OrderController extends Controller
             $errores = [];
             foreach ($request->pedido as $material) {
                 $materialEditar = Material::find($material['id']);
-                if ($materialEditar->cantidad_disponible < $material['cantidad']) {
-                    $errores[] = 'La cantidad solicitada es mayor a la disponible '.$materialEditar->nombre. 'cantidad disponible:'.$materialEditar->cantidad_disponible.' cantidad pedida '.$material['cantidad'];
+                if ($materialEditar->cantidad_utilizada < $material['cantidad']) {
+                    $errores[] = 'La cantidad solicitada es mayor a la disponible '.$materialEditar->nombre. ' cantidad disponible: '.$materialEditar->cantidad_utilizada.' cantidad pedida '.$material['cantidad'];
                 }
             }
 

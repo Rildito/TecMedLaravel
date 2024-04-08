@@ -21,6 +21,7 @@ class UserResource extends JsonResource
             "nombreCompleto" => $this->nombres . ' ' . $this->apellidoPaterno . ' ' . $this->apellidoMaterno,
             "tipo" => $this->tipo,
             "email" => $this->email,
+            "ci" => $this->ci,
         ];
     }
 }

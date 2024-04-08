@@ -9,7 +9,8 @@ class Student extends Model
 {
     protected $fillable = [
         'ru',
-        'mention_id'
+        'mention_id',
+        'user_id'
     ];
 
     public function mention() {
